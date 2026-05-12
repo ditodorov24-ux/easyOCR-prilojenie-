@@ -1,0 +1,1 @@
+pip install streamlit easyocr opencv-python pillow numpy
