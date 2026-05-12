@@ -3,56 +3,48 @@ from PIL import Image
 import pytesseract
 import re
 
-st.title("🧾 Food Scanner")
+st.title("🧾 Scanner за съставки")
 
-harmful = {
-    "e621": "MSG",
-    "e250": "Sodium Nitrite",
-    "e951": "Aspartame",
-    "palmoil": "Palm Oil"
+# вредни съставки (по-умно написани)
+HARMFUL_PATTERNS = {
+    r"e\s*621": "MSG (E621)",
+    r"e\s*250": "Sodium Nitrite (E250)",
+    r"e\s*951": "Aspartame (E951)",
+    r"e\s*211": "Sodium Benzoate (E211)",
+    r"palm\s*oil": "Palm Oil",
 }
 
-uploaded = st.file_uploader(
-    "Качи снимка",
-    type=["png", "jpg", "jpeg"]
-)
+uploaded = st.file_uploader("Качи снимка", type=["png","jpg","jpeg"])
 
 if uploaded:
 
     image = Image.open(uploaded)
 
-    st.image(image)
+    st.image(image, caption="Снимка")
 
     # OCR
     text = pytesseract.image_to_string(image)
 
-    st.subheader("OCR Text")
+    st.subheader("OCR резултат")
     st.write(text)
 
-    # Clean text
-    clean = text.lower()
+    if not text.strip():
+        st.error("OCR не разпозна текст → снимката е лоша или размазана")
+        st.stop()
 
-    clean = re.sub(r'[^a-zA-Z0-9]', '', clean)
+    text_lower = text.lower()
 
-    st.subheader("Clean")
-    st.write(clean)
-
-    # Search
     found = []
 
-    for item in harmful:
+    for pattern, name in HARMFUL_PATTERNS.items():
 
-        if item in clean:
-            found.append(
-                f"{item.upper()} → {harmful[item]}"
-            )
+        if re.search(pattern, text_lower):
+            found.append(name)
 
-    st.subheader("Result")
+    st.subheader("Резултат")
 
     if found:
-
         for f in found:
-            st.error(f)
-
+            st.error("⚠️ " + f)
     else:
-        st.success("No harmful ingredients")
+        st.success("Не са открити вредни съставки")
