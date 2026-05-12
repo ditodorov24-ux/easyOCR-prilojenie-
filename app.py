@@ -2,6 +2,44 @@ import streamlit as st
 import easyocr
 import numpy as np
 from PIL import Image
+import re
+
+# Нормализиране
+clean_text = extracted_text.lower()
+
+# махане на интервали, тирета и запетаи
+clean_text = re.sub(r'[\s\-,.:;()]', '', clean_text)
+
+st.subheader("Почистен текст")
+st.write(clean_text)
+
+# Вредни съставки
+harmful_ingredients = {
+    "e621": "Мононатриев глутамат",
+    "msg": "MSG",
+    "e250": "Натриев нитрит",
+    "e951": "Аспартам",
+    "palmoil": "Палмово масло",
+    "highfructosecornsyrup": "Глюкозо-фруктозен сироп",
+}
+
+found = []
+
+for ingredient, description in harmful_ingredients.items():
+
+    ingredient_clean = ingredient.lower().replace(" ", "")
+
+    if ingredient_clean in clean_text:
+        found.append(f"{ingredient} → {description}")
+
+# Резултат
+st.subheader("Резултат")
+
+if found:
+    for item in found:
+        st.error(item)
+else:
+    st.success("Няма открити вредни съставки")
 
 # -----------------------------
 # Настройки на страницата
